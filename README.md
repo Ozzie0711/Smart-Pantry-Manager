@@ -38,6 +38,25 @@ Smart Pantry Manager is an Android application developed in Java that helps user
 4. Allow Gradle to sync.
 5. Run the application using an Android emulator or compatible Android device.
 
+
+## Testing
+
+The application includes automated tests to verify its core functionality.
+
+### Unit Tests
+- Validate ingredient input rules.
+- Check ingredient names and quantities.
+
+### Instrumented Tests
+- Verify the application context.
+- Test SQLite ingredient creation, reading, updating, and deletion.
+- Confirm that 15 seeded recipes exist.
+- Verify that invalid ingredient data is rejected.
+- Ensure every seeded recipe has associated ingredients.
+
+### Test Results
+All five instrumented tests passed successfully. Unit tests also passed during development.
+
 ## Purpose
 
 This project demonstrates Android development, SQLite database integration, CRUD operations, input validation, screen navigation using Intents, and version control with Git.
