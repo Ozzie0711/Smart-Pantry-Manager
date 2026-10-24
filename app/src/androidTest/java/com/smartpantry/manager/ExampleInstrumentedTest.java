@@ -30,6 +30,32 @@ public class ExampleInstrumentedTest {
             database.close();
         }
     }
+
+    @Test
+    public void addIngredientRejectsInvalidData() {
+        Context context = InstrumentationRegistry
+                .getInstrumentation()
+                .getTargetContext();
+
+        DatabaseHelper database = new DatabaseHelper(context);
+
+        try {
+            assertFalse(database.addIngredient(
+                    "", 5, "pieces", null));
+
+            assertFalse(database.addIngredient(
+                    "Tomato", 0, "pieces", null));
+
+            assertFalse(database.addIngredient(
+                    "Tomato", -2, "pieces", null));
+
+            assertFalse(database.addIngredient(
+                    "Tomato", 5, "", null));
+
+        } finally {
+            database.close();
+        }
+    }
     @Test
     public void useAppContext() {
         Context context = InstrumentationRegistry
