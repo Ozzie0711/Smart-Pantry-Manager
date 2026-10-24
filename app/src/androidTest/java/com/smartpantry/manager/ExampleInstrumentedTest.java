@@ -14,6 +14,22 @@ import static org.junit.Assert.*;
 @RunWith(AndroidJUnit4.class)
 public class ExampleInstrumentedTest {
 
+
+    @Test
+    public void databaseContainsFifteenSeededRecipes() {
+        Context context = InstrumentationRegistry
+                .getInstrumentation()
+                .getTargetContext();
+
+        DatabaseHelper database = new DatabaseHelper(context);
+
+        try (Cursor cursor = database.getAllRecipes()) {
+            assertEquals("The database should contain 15 recipes",
+                    15, cursor.getCount());
+        } finally {
+            database.close();
+        }
+    }
     @Test
     public void useAppContext() {
         Context context = InstrumentationRegistry
