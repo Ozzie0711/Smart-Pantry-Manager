@@ -1,6 +1,7 @@
 package com.smartpantry.manager;
 
 import android.content.Context;
+import android.database.Cursor;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -34,11 +35,10 @@ public class ExampleInstrumentedTest {
         String originalName = "Test Tomato";
         String updatedName = "Updated Tomato";
 
-        // Remove leftover test data from previous runs.
-        android.database.Cursor oldItems =
-                database.getReadableDatabase().rawQuery(
-                        "SELECT id FROM pantry_items WHERE name = ?",
-                        new String[]{originalName});
+        // Clean up leftover test data.
+        Cursor oldItems = database.getReadableDatabase().rawQuery(
+                "SELECT id FROM pantry_items WHERE name = ?",
+                new String[]{originalName});
 
         try {
             while (oldItems.moveToNext()) {
@@ -49,19 +49,19 @@ public class ExampleInstrumentedTest {
         }
 
         // ADD
-        assertTrue(database.addIngredient(
-                originalName, 5, "pieces", null));
+        assertTrue("Ingredient should be added",
+                database.addIngredient(
+                        originalName, 5, "pieces", null));
 
         int ingredientId = -1;
 
-        android.database.Cursor cursor =
-                database.getReadableDatabase().rawQuery(
-                        "SELECT id, name, quantity, unit FROM pantry_items WHERE name = ?",
-                        new String[]{originalName});
+        // READ
+        Cursor cursor = database.getReadableDatabase().rawQuery(
+                "SELECT id, name, quantity, unit FROM pantry_items WHERE name = ?",
+                new String[]{originalName});
 
         try {
-            assertTrue("Ingredient should exist after adding",
-                    cursor.moveToFirst());
+            assertTrue("Ingredient should exist", cursor.moveToFirst());
 
             ingredientId = cursor.getInt(
                     cursor.getColumnIndexOrThrow("id"));
@@ -84,7 +84,7 @@ public class ExampleInstrumentedTest {
                 database.updateIngredient(
                         ingredientId, updatedName, 10, "kg", null));
 
-        // READ updated values
+        // VERIFY UPDATED VALUES
         cursor = database.getReadableDatabase().rawQuery(
                 "SELECT name, quantity, unit FROM pantry_items WHERE id = ?",
                 new String[]{String.valueOf(ingredientId)});
@@ -117,7 +117,7 @@ public class ExampleInstrumentedTest {
                 new String[]{String.valueOf(ingredientId)});
 
         try {
-            assertFalse("Deleted ingredient should no longer exist",
+            assertFalse("Deleted ingredient should not exist",
                     cursor.moveToFirst());
         } finally {
             cursor.close();
@@ -133,8 +133,7 @@ public class ExampleInstrumentedTest {
                 .getTargetContext();
 
         DatabaseHelper database = new DatabaseHelper(context);
-
-        android.database.Cursor recipes = database.getAllRecipes();
+        Cursor recipes = database.getAllRecipes();
 
         try {
             assertEquals(15, recipes.getCount());
@@ -152,18 +151,56 @@ public class ExampleInstrumentedTest {
 
         DatabaseHelper database = new DatabaseHelper(context);
 
-        assertFalse(database.addIngredient(
-                "", 5, "pieces", null));
+        try {
+            assertFalse(database.addIngredient(
+                    "", 5, "pieces", null));
 
-        assertFalse(database.addIngredient(
-                "Test Invalid", 0, "pieces", null));
+            assertFalse(database.addIngredient(
+                    "Test Invalid", 0, "pieces", null));
 
-        assertFalse(database.addIngredient(
-                "Test Invalid", -5, "pieces", null));
+            assertFalse(database.addIngredient(
+                    "Test Invalid", -5, "pieces", null));
 
-        assertFalse(database.addIngredient(
-                "Test Invalid", 5, "", null));
+            assertFalse(database.addIngredient(
+                    "Test Invalid", 5, "", null));
+        } finally {
+            database.close();
+        }
+    }
 
-        database.close();
+    @Test
+    public void seededRecipesHaveIngredients() {
+        Context context = InstrumentationRegistry
+                .getInstrumentation()
+                .getTargetContext();
+
+        DatabaseHelper database = new DatabaseHelper(context);
+        Cursor recipes = database.getAllRecipes();
+
+        try {
+            assertTrue("Recipes should exist",
+                    recipes.moveToFirst());
+
+            do {
+                int recipeId = recipes.getInt(
+                        recipes.getColumnIndexOrThrow("id"));
+
+                Cursor ingredients =
+                        database.getRecipeIngredients(recipeId);
+
+                try {
+                    assertTrue(
+                            "Each seeded recipe should have ingredients",
+                            ingredients.getCount() > 0);
+                } finally {
+                    ingredients.close();
+                }
+
+            } while (recipes.moveToNext());
+
+        } finally {
+            recipes.close();
+            database.close();
+        }
     }
 }
